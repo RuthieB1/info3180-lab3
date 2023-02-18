@@ -1,6 +1,8 @@
 from app import app
+from app.forms import ContactForm
 from flask import render_template, request, redirect, url_for, flash
-
+from app import mail
+from flask_mail import Message
 
 ###
 # Routing for your application.
@@ -51,6 +53,17 @@ def add_header(response):
     response.headers['Cache-Control'] = 'public, max-age=0'
     return response
 
+@app.route("/contact", methods=["GET","POST"])
+def contact():
+    formobject = ContactForm()
+    if request.method == "POST":
+        if formobject.validate_on_submit():
+            msg = Message(f"{request.form['subject']}", sender=(f"{request.form['name']}", f"{request.form['email']}"),recipients=["to@example.com"])
+            msg.body = f"{request.form['message']}"
+            mail.send(msg)
+            flash('Your message was sent successfully!')
+            return redirect(url_for('home'))
+    return render_template('contact.html', formobj = formobject)
 
 @app.errorhandler(404)
 def page_not_found(error):
